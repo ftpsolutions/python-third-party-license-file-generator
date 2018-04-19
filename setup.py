@@ -24,17 +24,17 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='2018.1',
+    version='2018.3',
 
-    description='A thread pool that auto-manages the number of worker threads and is compatible with the "futures" module ThreadPoolExecutor interface.',
+    description='The Python third_party_license_file_generator is aimed at distilling down the appropriate license for one or many pip "requirements" files into a single file; it supports Python2.7 and Python3.',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/initialed85/collapsing-thread-pool-executor',
+    url='https://github.com/ftpsolutions/python-third-party-license-file-generator',
 
     # Author details
     author='Edward Beech',
-    author_email='initialed85@gmail.com',
+    author_email='edward.beech@ftpsolutions.com.au',
 
     # Choose your license
     license='MIT',
