@@ -10,7 +10,7 @@ from third_party_license_file_generator.site_packages import SitePackages
 
 # for Python2.7
 try:
-    reload (sys)
+    reload(sys)
     sys.setdefaultencoding('utf-8')
 except Exception:
     pass
@@ -107,7 +107,12 @@ parser.add_argument(
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    pairs = tuple(zip(args.requirements_path, args.python_path))
+    pairs = tuple(
+        zip(
+            [x.strip() for x in args.requirements_path if x.strip() != ''],
+            [x.strip() for x in args.python_path if x.strip() != ''],
+        )
+    )
 
     print('mixing requirements paths and Python paths together as follows:')
 
