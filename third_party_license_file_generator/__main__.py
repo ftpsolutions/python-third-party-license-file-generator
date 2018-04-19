@@ -117,7 +117,10 @@ if __name__ == '__main__':
     print('mixing requirements paths and Python paths together as follows:')
 
     for pair in pairs:
-        print('\t', pair)
+        print('\t{0} - {1}'.format(
+            repr(pair[0]),
+            repr(pair[1]),
+        ))
 
     print('\nworking on license summary...\n')
 
