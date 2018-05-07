@@ -48,11 +48,11 @@ Two different pip "requirements" files, two different Python paths (Virtualenvs)
         -p ~/.virtualenvs/backend_py/bin/python \
         -r requirements-pypy.txt \
         -p ~/.virtualenvs/backend_pypy/bin/python \
-        --skip-prefix ims-
+        -s ims-
 
 Please note that pip "requirements" files and Python executable paths are paired together in the order they're specified.
 
-Three different pip "requirements" files, two different Python paths (Virtualenvs), a GPL exception and a custom output file:
+Three different pip "requirements" files, two different Python paths (need to repeat), a GPL exception and a custom output file:
 
     python -m third_party_license_file_generator \
         -r requirements.txt \
@@ -61,8 +61,26 @@ Three different pip "requirements" files, two different Python paths (Virtualenv
         -p ~/.virtualenvs/api_pypy/bin/python \
         -r cpython_requirements.txt \
         -p ~/.virtualenvs/api_py/bin/python \
-        --gpl-exception uwsgi
-        --output-file ThirdPartyLicenses.txt
+        -x uWSGI \ 
+        -o ThirdPartyLicenses.txt
+
+Three different pip "requirements" files, two different Python paths (need to repeat), a GPL exception, a custom output file and a license override file:
+
+    # contents of license_override_file.yml
+    uWSGI: 
+        license_name: GPL-2.0 w/ linking exception
+        license_file: https://raw.githubusercontent.com/unbit/uwsgi/master/LICENSE
+
+    python -m third_party_license_file_generator \
+        -r requirements.txt \
+        -p ~/.virtualenvs/api_pypy/bin/python \
+        -r pypy_requirements.txt \
+        -p ~/.virtualenvs/api_pypy/bin/python \
+        -r cpython_requirements.txt \
+        -p ~/.virtualenvs/api_py/bin/python \
+        -x uWSGI \ 
+        -o ThirdPartyLicenses.txt \
+        -l license_override_file.yml
 
 An example of the structure of the generated third party license file is as follows:
 

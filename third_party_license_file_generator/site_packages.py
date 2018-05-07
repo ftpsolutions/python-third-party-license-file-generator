@@ -78,11 +78,13 @@ class LicenseError(Exception):
 
 
 class SitePackages(object):
-    def __init__(self, requirements_path, python_path=None, skip_prefixes=None, autorun=True, use_internet=True):
+    def __init__(self, requirements_path, python_path=None, skip_prefixes=None,
+                 autorun=True, use_internet=True, license_overrides=None):
         self._requirements_path = requirements_path
         self._python_path = python_path if python_path is not None else distutils.spawn.find_executable('python3')
         self._skip_prefixes = skip_prefixes
         self._use_internet = use_internet
+        self._license_overrides = license_overrides if license_overrides is not None else {}
 
         self._root_module_names = set()
         self._required_module_names = set()
@@ -271,60 +273,73 @@ class SitePackages(object):
 
             author = metadata['author']
             home_page = metadata['home_page']
-            original_license_name = metadata['license_name']
-            license_file = self._module_licenses_by_module_name.get(module_name)
 
-            # print('details are', [author, home_page, original_license_name])
+            overriden_license_name = None
+            overriden_license_file = None
 
-            license_name = parse_license(original_license_name)
-            # if license_name is not None:
-            #     print('got license_name', repr(license_name))
+            license_override = self._license_overrides.get(module_name)
+            if module_name in self._license_overrides:
+                overriden_license_name = license_override.get('license_name')
+                overriden_license_file = license_override.get('license_file')
 
-            # if license_file is not None:
-            #     print('got license_file from module folder')
+            if None not in [overriden_license_name, overriden_license_file]:
+                license_name = overriden_license_name
+                license_file = overriden_license_file
+            else:
+                original_license_name = metadata['license_name']
+                license_file = self._module_licenses_by_module_name.get(module_name)
 
-            github_license_file = None
-            if original_license_name not in ['Commercial']:
-                if license_name is None and self._use_internet:
-                    pypi_license_name = get_license_from_pypi_license_scrape(module_name)
-                    license_name = parse_license(pypi_license_name)
-                    # if license_name is not None:
-                    #     print('got license_name from PyPI', repr(license_name))
+                # print('details are', [author, home_page, original_license_name])
 
-                    if license_name is None:
-                        if home_page is not None and 'github' in home_page and self._use_internet:
-                            github_license_file = get_license_from_github_home_page_scrape(home_page)
-                            license_name = parse_license(github_license_file)
-                            # if license_name is not None:
-                            #     print('got license_name from Github repo', repr(license_name))
+                license_name = parse_license(original_license_name)
+                # if license_name is not None:
+                #     print('got license_name', repr(license_name))
 
-                            if license_file is None:
-                                license_file = github_license_file
-
-                                # if license_file is not None:
-                                #     print('got license_file from Github repo')
-
-            if license_file is None:
-                if github_license_file is None and self._use_internet:
-                    github_license_file = get_license_from_github_home_page_scrape(home_page)
-
-                license_file = github_license_file
                 # if license_file is not None:
-                #     print('got license_file from Github repo')
+                #     print('got license_file from module folder')
 
-            if license_file is None and license_name is not None:
-                license_file = build_license_file_for_author(author, license_name)
-                # if license_file is not None:
-                #     print('built license_file from local store')
+                github_license_file = None
+                if original_license_name not in ['Commercial']:
+                    if license_name is None and self._use_internet:
+                        pypi_license_name = get_license_from_pypi_license_scrape(module_name)
+                        license_name = parse_license(pypi_license_name)
+                        # if license_name is not None:
+                        #     print('got license_name from PyPI', repr(license_name))
 
-            # if license_name is None:
-            #     print('warning: all attempts to get license_name failed')
-            # elif license_file is None:
-            #     print('warning: all attempts to get license_file failed')
+                        if license_name is None:
+                            if home_page is not None and 'github' in home_page and self._use_internet:
+                                github_license_file = get_license_from_github_home_page_scrape(home_page)
+                                license_name = parse_license(github_license_file)
+                                # if license_name is not None:
+                                #     print('got license_name from Github repo', repr(license_name))
 
-            if license_name is None:
-                license_name = 'Unknown (assumed commercial)'
-                license_file = build_license_file_for_author(author, 'Commercial')
+                                if license_file is None:
+                                    license_file = github_license_file
+
+                                    # if license_file is not None:
+                                    #     print('got license_file from Github repo')
+
+                if license_file is None:
+                    if github_license_file is None and self._use_internet:
+                        github_license_file = get_license_from_github_home_page_scrape(home_page)
+
+                    license_file = github_license_file
+                    # if license_file is not None:
+                    #     print('got license_file from Github repo')
+
+                if license_file is None and license_name is not None:
+                    license_file = build_license_file_for_author(author, license_name)
+                    # if license_file is not None:
+                    #     print('built license_file from local store')
+
+                # if license_name is None:
+                #     print('warning: all attempts to get license_name failed')
+                # elif license_file is None:
+                #     print('warning: all attempts to get license_file failed')
+
+                if license_name is None:
+                    license_name = 'Unknown (assumed commercial)'
+                    license_file = build_license_file_for_author(author, 'Commercial')
 
             module = Module(
                 name=module_name,

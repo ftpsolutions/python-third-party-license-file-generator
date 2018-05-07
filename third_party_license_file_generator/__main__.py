@@ -6,6 +6,8 @@ import datetime
 import os
 import sys
 
+import requests
+import yaml
 from third_party_license_file_generator.site_packages import SitePackages
 
 # for Python2.7
@@ -104,8 +106,53 @@ parser.add_argument(
     )
 )
 
+parser.add_argument(
+    '-l',
+    '--license-override-file',
+    type=str,
+    required=False,
+    default=None,
+    help='the location of a YAML file that describes a dict {"(some case-sensitive package name)": {"license_name": "(some license name)", "license_file": "(URL or system file path to license file"}} (but as YAML)'
+)
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
+
+    license_overrides = {}
+    if args.license_override_file is not None:
+        with codecs.open(args.license_override_file, 'r', 'utf-8') as f:
+            license_overrides = yaml.load(f.read())
+
+        for module_name, license_override in license_overrides.items():
+            license_name = license_override.get('license_name')
+            license_file = license_override.get('license_file')
+            if None in [license_name, license_file]:
+                print(
+                    'ERROR: license_name or license_file for license override of {0} missing or empty'.format(
+                        repr(module_name)
+                    )
+                )
+                sys.exit(1)
+
+            actual_license_file = None
+            if license_file.lower().startswith('http'):
+                r = requests.get(license_file, timeout=5)
+                actual_license_file = r.text.strip()
+            else:
+                with codecs.open(license_file, 'r', 'utf-8') as f:
+                    actual_license_file = f.read().strip()
+
+            if actual_license_file is None:
+                print(
+                    'ERROR: attempt to get license_file for license override of {0} from {1} returned empty file'.format(
+                        repr(module_name),
+                        repr(license_file)
+                    )
+                )
+                sys.exit(1)
+
+            license_override['license_file'] = actual_license_file
 
     pairs = tuple(
         zip(
@@ -137,6 +184,7 @@ if __name__ == '__main__':
                 python_path=python_path,
                 skip_prefixes=args.skip_prefix,
                 use_internet=not args.no_internet_lookups,
+                license_overrides=license_overrides,
             )
         ]
 
@@ -156,7 +204,7 @@ if __name__ == '__main__':
         module_output = ''
         module_names = []
         for module in modules:
-            module_names += [module.name.lower()]
+            module_names += [module.name]
             module_output += '\t{0} by {1} ({2})\n'.format(
                 repr(module.name),
                 repr(module.author),
@@ -165,7 +213,7 @@ if __name__ == '__main__':
 
         warning = ''
         if not args.permit_gpl and license_name.startswith('GPL') and not all(
-                [x.lower() in args.gpl_exception for x in module_names]):
+                [x in args.gpl_exception for x in module_names]):
             warning = gpl_warning
             gpl_triggered = True
         elif not args.permit_commercial and license_name in ['Commercial', 'Unknown (assumed commercial)']:
@@ -217,7 +265,7 @@ if __name__ == '__main__':
 
     separator = u'-' * 40
 
-    data = 'u\n\n{0}\n\n'.format(separator).join(third_party_licenses)
+    data = u'\n\n{0}\n\n'.format(separator).join(third_party_licenses)
 
     with codecs.open(args.output_file, 'w', 'utf-8') as f:
         f.write(data.strip() + '\n')
