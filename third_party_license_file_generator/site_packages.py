@@ -23,7 +23,6 @@ def _run_subprocess(command_line):
         p = subprocess.Popen(
             executable=sys.executable,
             args=shlex.split(command_line),
-            cwd=os.getcwd(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
@@ -41,10 +40,7 @@ def _run_subprocess(command_line):
         stdout, stderr = None, None
 
     try:
-        if platform.system() == 'Windows':
-            p.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            p.terminate()
+        p.terminate()
     except Exception:
         pass
 
