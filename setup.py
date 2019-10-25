@@ -28,6 +28,7 @@ setup(
 
     description='The Python third_party_license_file_generator is aimed at distilling down the appropriate license for one or many pip "requirements" files into a single file; it supports Python2.7 and Python3.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
 
     # The project's main homepage.
     url='https://github.com/ftpsolutions/python-third-party-license-file-generator',
