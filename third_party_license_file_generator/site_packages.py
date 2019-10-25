@@ -5,6 +5,9 @@ import os
 import shlex
 import signal
 import subprocess
+import sys
+import platform
+from codecs import open
 
 from third_party_license_file_generator.licenses import (build_license_file_for_author,
                                                          get_license_from_github_home_page_scrape,
@@ -17,12 +20,20 @@ def _pre_exec():
 
 
 def _run_subprocess(command_line):
-    p = subprocess.Popen(
-        shlex.split(command_line),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        preexec_fn=_pre_exec
-    )
+    if platform.system() == 'Windows':
+        p = subprocess.Popen(
+            executable=sys.executable,
+            args=shlex.split(command_line),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    else:
+        p = subprocess.Popen(
+            args=shlex.split(command_line),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            preexec_fn=_pre_exec
+        )
 
     try:
         stdout, stderr = [x.strip() for x in p.communicate()]
@@ -155,7 +166,7 @@ class SitePackages(object):
 
         try:
             site_packages_path = [
-                x for x in sys_path if '/site-packages' in x
+                x for x in sys_path if 'site-packages' in x
             ][0]
         except Exception:
             return None
@@ -163,7 +174,7 @@ class SitePackages(object):
         return site_packages_path
 
     def _read_metadata(self, metadata_path):
-        with open(metadata_path, 'r') as f:
+        with open(metadata_path, 'r', encoding="utf-8") as f:
             data = f.read().replace('\r\n', '\n')
 
         interesting_data = data.split('\n\n')[0].strip()
@@ -217,7 +228,7 @@ class SitePackages(object):
             metadata = None
             license_file = None
             for sub_thing in os.listdir(path_to_thing):
-                path_to_sub_thing = '{0}/{1}'.format(path_to_thing, sub_thing)
+                path_to_sub_thing = os.path.join(path_to_thing, sub_thing)
                 if not os.path.isfile(path_to_sub_thing):
                     continue
 
@@ -241,7 +252,7 @@ class SitePackages(object):
                 self._module_licenses_by_module_name[module_name] = license_file
 
     def _read_license(self, license_path):
-        with open(license_path, 'r') as f:
+        with open(license_path, 'r', encoding='utf-8', errors='ignore') as f:
             data = f.read()
 
         return data.strip()
