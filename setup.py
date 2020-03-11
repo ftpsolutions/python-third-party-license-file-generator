@@ -77,7 +77,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'requests==2.18.4',
+        'requests==2.23.0',
         'PyYAML==3.13'
     ],
 
