@@ -1,3 +1,5 @@
+FORKED TO UPDATE REQUESTS LIBRARY VERSION
+
 # Python third_party_license_file_generator
 
 The Python third_party_license_file_generator is aimed at distilling down the appropriate license for one or many pip "requirements" files into a single file; it supports Python2.7 and Python3.
