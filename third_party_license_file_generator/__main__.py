@@ -216,7 +216,8 @@ if __name__ == '__main__':
                 [x in args.gpl_exception for x in module_names]):
             warning = gpl_warning
             gpl_triggered = True
-        elif not args.permit_commercial and license_name in ['Commercial', 'Unknown (assumed commercial)']:
+        elif not args.permit_commercial and license_name in ['Commercial', 'Unknown (assumed commercial)'] and not all(
+                [x in args.commercial_exception for x in module_names]):
             warning = commercial_warning
             commercial_triggered = True
 
