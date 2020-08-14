@@ -38,6 +38,7 @@ You can specify a number of command line options (check syntax with -h) to do th
 - specific comercially-licensed package exceptions (e.g. if you have a license for a package or if you own a package)
 - a "skip prefix" (e.g. if you want to skip all packages starting with a certain string)
 - disable internet lookups (if you don't want to pull data from PyPI and GitHub)
+- disable skipping of not required packages (packages that are not requirements of other packages are skipped by default during license file generation)
 
 ## Examples
 
