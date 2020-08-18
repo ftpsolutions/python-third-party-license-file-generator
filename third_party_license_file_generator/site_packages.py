@@ -89,12 +89,13 @@ class LicenseError(Exception):
 
 class SitePackages(object):
     def __init__(self, requirements_path, python_path=None, skip_prefixes=None,
-                 autorun=True, use_internet=True, license_overrides=None):
+                 autorun=True, use_internet=True, license_overrides=None, do_not_skip_not_required_packages=False):
         self._requirements_path = requirements_path
         self._python_path = python_path if python_path is not None else distutils.spawn.find_executable('python3')
         self._skip_prefixes = skip_prefixes
         self._use_internet = use_internet
         self._license_overrides = license_overrides if license_overrides is not None else {}
+        self._do_not_skip_not_required_packages = do_not_skip_not_required_packages
 
         self._root_module_names = set()
         self._required_module_names = set()
@@ -258,7 +259,7 @@ class SitePackages(object):
 
     def _read_site_packages(self):
         for module_name, metadata in self._module_metadatas_by_module_name.items():
-            if module_name not in self._root_module_names and module_name not in self._required_module_names:
+            if not self._do_not_skip_not_required_packages and module_name not in self._root_module_names and module_name not in self._required_module_names:
                 # print('skipping', module_name, 'as it\'s not in the root modules or any of their requirements')
                 # print('')
                 continue

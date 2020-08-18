@@ -86,6 +86,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '-d',
+    '--do-not-skip-not-required-packages',
+    action='store_true',
+    required=False,
+    default=False,
+    help='do not skip packages that are not requirements of other packages',
+)
+
+parser.add_argument(
     '-o',
     '--output-file',
     type=str,
@@ -185,6 +194,7 @@ if __name__ == '__main__':
                 skip_prefixes=args.skip_prefix,
                 use_internet=not args.no_internet_lookups,
                 license_overrides=license_overrides,
+                do_not_skip_not_required_packages=args.do_not_skip_not_required_packages,
             )
         ]
 
