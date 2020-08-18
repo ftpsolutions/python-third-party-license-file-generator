@@ -226,7 +226,7 @@ class SitePackages(object):
                 if thing.endswith('.egg') and os.path.isdir(os.path.join(path_to_thing, 'EGG-INFO')):
                     path_to_thing = os.path.join(path_to_thing, 'EGG-INFO')
                 else:
-                continue
+                	continue
 
             metadata = None
             license_file = None
