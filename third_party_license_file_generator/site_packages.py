@@ -223,7 +223,10 @@ class SitePackages(object):
                 continue
 
             if not thing.endswith('dist-info'):
-                continue
+                if thing.endswith('.egg') and os.path.isdir(os.path.join(path_to_thing, 'EGG-INFO')):
+                    path_to_thing = os.path.join(path_to_thing, 'EGG-INFO')
+                else:
+                	continue
 
             metadata = None
             license_file = None
@@ -232,9 +235,9 @@ class SitePackages(object):
                 if not os.path.isfile(path_to_sub_thing):
                     continue
 
-                if sub_thing == 'METADATA':
+                if sub_thing == 'METADATA' or sub_thing == 'PKG-INFO':
                     metadata = self._read_metadata(path_to_sub_thing)
-                elif 'LICENSE' in sub_thing:
+                elif 'LICENSE' in sub_thing or 'COPYING' in sub_thing:
                     license_file = self._read_license(path_to_sub_thing)
 
             if metadata is None:
@@ -289,7 +292,7 @@ class SitePackages(object):
             overriden_license_file = None
 
             license_override = self._license_overrides.get(module_name)
-            if module_name in self._license_overrides:
+            if license_override:
                 overriden_license_name = license_override.get('license_name')
                 overriden_license_file = license_override.get('license_file')
 
@@ -331,7 +334,7 @@ class SitePackages(object):
                                     #     print('got license_file from Github repo')
 
                 if license_file is None:
-                    if github_license_file is None and self._use_internet:
+                    if home_page is not None and github_license_file is None and self._use_internet:
                         github_license_file = get_license_from_github_home_page_scrape(home_page)
 
                     license_file = github_license_file
