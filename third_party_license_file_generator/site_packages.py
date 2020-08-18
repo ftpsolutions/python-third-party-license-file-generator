@@ -22,8 +22,7 @@ def _pre_exec():
 def _run_subprocess(command_line):
     if platform.system() == 'Windows':
         p = subprocess.Popen(
-            executable=sys.executable,
-            args=shlex.split(command_line),
+            args=command_line.split(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
