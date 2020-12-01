@@ -23,7 +23,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='2020.7.19',
+    version='2020.12.1',
 
     description='The Python third_party_license_file_generator is aimed at distilling down the appropriate license for one or many pip "requirements" files into a single file; it supports Python2.7 and Python3.',
     long_description=long_description,
@@ -76,8 +76,8 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'requests==2.20.0',
-        'PyYAML==5.1'
+        'requests==2.25.0',
+        'PyYAML==5.3.1'
     ],
 
     # List additional groups of dependencies here (e.g. development
