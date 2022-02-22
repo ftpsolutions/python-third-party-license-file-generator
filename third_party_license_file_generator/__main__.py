@@ -131,7 +131,7 @@ if __name__ == "__main__":
     license_overrides = {}
     if args.license_override_file is not None:
         with codecs.open(args.license_override_file, "r", "utf-8") as f:
-            license_overrides = yaml.load(f.read())
+            license_overrides = yaml.load(f.read(), Loader=yaml.SafeLoader)
 
         for module_name, license_override in license_overrides.items():
             license_name = license_override.get("license_name")
