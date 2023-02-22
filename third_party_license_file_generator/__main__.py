@@ -12,8 +12,8 @@ from third_party_license_file_generator.site_packages import SitePackages
 
 # for Python2.7
 try:
-    reload(sys)
-    sys.setdefaultencoding("utf-8")
+    reload(sys)  # noqa
+    sys.setdefaultencoding("utf-8")  # noqa
 except Exception:
     pass
 
