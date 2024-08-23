@@ -197,13 +197,14 @@ class SitePackages(object):
         return site_packages_path
 
     @staticmethod
-    def _set_metadata_dict_value(metadata_dict, key, value):
+    def _set_metadata_dict_value(metadata_path, metadata_dict, key, value):
         # In the implementation of the metadata parsing we look for keys that are present in
         # older style setup.py metadata AND newer style pyproject.toml metadata.
         # We don't expect to encounter a situation where this presents an issue, but it might.
         # Add some logging for this case.
         if metadata_dict.get(key, None) is not None:
-            print("INFO: key {} is already set in metadata. Changing value from {} to {}".format(
+            print("INFO: For METADATA {} key {} is already set in parsed metadata. Changing value from {} to {}".format(
+                metadata_path,
                 key,
                 metadata_dict[key],
                 value,
@@ -241,20 +242,29 @@ class SitePackages(object):
                 metadata["author"] = metadata["author"].strip()
             elif key == "Home-page":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(metadata_dict=metadata, key="home_page", value=value)
+                self._set_metadata_dict_value(metadata_path=metadata_path,
+                                              metadata_dict=metadata,
+                                              key="home_page",
+                                              value=value)
             elif key == "License":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(metadata_dict=metadata, key="license_name", value=value)
+                self._set_metadata_dict_value(metadata_path=metadata_path,
+                                              metadata_dict=metadata,
+                                              key="license_name",
+                                              value=value)
             elif line.startswith(_TOML_METADATA_HOMEPAGE_PREFIX):
                 # Used for pyproject.toml metadata packages
                 # Line example: Project-URL: Homepage, https://github.com/carltongibson/django-filter/tree/main
-                self._set_metadata_dict_value(metadata_dict=metadata, key="home_page",
+                self._set_metadata_dict_value(metadata_path=metadata_path,
+                                              metadata_dict=metadata,
+                                              key="home_page",
                                               value=line.split(_TOML_METADATA_HOMEPAGE_PREFIX)[-1])
             elif line.startswith(_TOML_METADATA_LICENSE_PREFIX):
                 # Used for pyproject.toml metadata packages
                 # Line example:
                 # Classifier: License :: OSI Approved :: MIT License
-                self._set_metadata_dict_value(metadata_dict=metadata,
+                self._set_metadata_dict_value(metadata_path=metadata_path,
+                                              metadata_dict=metadata,
                                               key="license_name",
                                               value=line.split(_TOML_METADATA_LICENSE_PREFIX)[-1])
             elif key == "Requires-Dist":
