@@ -115,7 +115,8 @@ def get_license_from_pypi_license_scrape(module_name):
     if r.status_code != 200:
         return None
 
-    return r.text.split("<p><strong>License:</strong>")[-1].split("</p>")[0].strip().split("\n")[0]
+    match = re.search("License:</.+>([^<]+)", r.text)
+    return match.group(1).strip() if match is not None else None
 
 
 def get_license_from_github_home_page_scrape(url):
