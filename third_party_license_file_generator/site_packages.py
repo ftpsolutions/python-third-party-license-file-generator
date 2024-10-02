@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import distutils
+import shutil
 import os
 import shlex
 import signal
@@ -116,7 +116,7 @@ class SitePackages(object):
         do_not_skip_not_required_packages=False,
     ):
         self._requirements_path = requirements_path
-        self._python_path = python_path if python_path is not None else distutils.spawn.find_executable("python3")  # noqa
+        self._python_path = python_path if python_path is not None else shutil.which("python3")  # noqa
         self._skip_prefixes = skip_prefixes
         self._use_internet = use_internet
         self._license_overrides = license_overrides if license_overrides is not None else {}
