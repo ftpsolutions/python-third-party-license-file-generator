@@ -2,6 +2,7 @@
 
 import shutil
 import os
+import re
 import shlex
 import signal
 import subprocess
@@ -175,7 +176,14 @@ class SitePackages(object):
             elif "--" in line:
                 continue
             else:
-                self._root_module_names.add(line.split("==")[0].strip())
+                matches = [x for x in re.finditer(r"(^[\w|-|_]+).*$", line)]
+
+                for match in matches:
+                    if not match:
+                        continue
+
+                    for group in match.groups():
+                        self._root_module_names.add(group)
 
     def _get_site_packages_folder(self):
         out, err, returncode = _run_subprocess("{0} -m site".format(self._python_path))

@@ -8,7 +8,7 @@ import datetime
 
 # To use a consistent encoding
 from codecs import open
-from os import path
+from os import path, getenv
 
 # Always prefer setuptools over distutils
 from setuptools import find_packages, setup
@@ -36,7 +36,8 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="{}.{}.{}".format(
+    version=getenv("VERSION_OVERRIDE")
+    or "{}.{}.{}".format(
         now.year,
         now.month,
         now.day,

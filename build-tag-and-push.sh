@@ -14,4 +14,9 @@ fi
 
 docker build --build-arg "VERSION=${python_version}" -f ./Dockerfile -t "${image}" .
 
-docker run --rm --name "${container}" -v "${HOME}/.pypirc:/root/.pypirc" --workdir "/srv/python-third-party-license-file-generator" --entrypoint bash "${image}" -c "python setup.py sdist && twine upload dist/*"
+command="python setup.py sdist && ls -al dist/* && twine upload dist/*"
+if [[ "${SKIP_PUSH}" == "1" ]]; then
+    command="python setup.py sdist && ls -al dist/*"
+fi
+
+docker run --rm --name "${container}" -e "VERSION_OVERRIDE=${VERSION}" -v "${HOME}/.pypirc:/root/.pypirc" --workdir "/srv/python-third-party-license-file-generator" --entrypoint bash "${image}" -c "${command}"

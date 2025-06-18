@@ -8,14 +8,10 @@ python -u -m third_party_license_file_generator \
     --do-not-skip-not-required-packages \
     --permit-gpl
 
-echo ""
-
 if ! test -e THIRDPARTYLICENSES; then
     echo "error: couldn't find THIRDPARTYLICENSES- something has gone badly wrong"
 
     exit 1
 fi
 
-cat THIRDPARTYLICENSES
-
-echo ""
+python3 /srv/python-third-party-license-file-generator/check_third_party_licenses.py
