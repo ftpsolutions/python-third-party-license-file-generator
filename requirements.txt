@@ -1,2 +1,6 @@
-requests>=2.25
-PyYAML>=5.4
+requests>=2.25; python_version>="3.0"
+PyYAML>=5.4; python_version>="3.0"
+
+# just hope for the best w/ Python2
+requests>=2.25; python_version<"3.0"
+PyYAML<5.4; python_version<"3.0"

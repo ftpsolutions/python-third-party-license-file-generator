@@ -4,12 +4,26 @@ https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
+import datetime
+
 # To use a consistent encoding
 from codecs import open
 from os import path
 
 # Always prefer setuptools over distutils
 from setuptools import find_packages, setup
+
+python3 = True
+
+try:
+    import sys
+
+    if sys.version_info < (3, 0):
+        python3 = False
+except Exception:
+    pass
+
+now = datetime.datetime.now()
 
 here = path.abspath(path.dirname(__file__))
 
@@ -22,7 +36,11 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="2024.8.23",
+    version="{}.{}.{}".format(
+        now.year,
+        now.month,
+        now.day,
+    ),
     description='The Python third_party_license_file_generator is aimed at distilling down the appropriate license for one or many pip "requirements" files into a single file; it supports Python2.7 and Python3.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -62,10 +80,17 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[
-        "requests>=2.25",
-        "PyYAML>=5.4",
-    ],
+    install_requires=(
+        [
+            "requests>=2.25",
+            "PyYAML>=5.4",
+        ]
+        if python3
+        else [
+            "requests>=2.25",
+            "PyYAML<5.4",
+        ]
+    ),
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:

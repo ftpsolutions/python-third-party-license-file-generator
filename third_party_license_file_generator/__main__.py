@@ -197,6 +197,8 @@ if __name__ == "__main__":
         joined += x
 
     print("")
+    print("--- --- --- ---")
+    print("")
 
     gpl_warning = " <---- !!! WARNING: you have specified not to permit GPL licenses but GPL-licensed packages were detected"
     commercial_warning = (
@@ -206,7 +208,7 @@ if __name__ == "__main__":
     gpl_triggered = False
     commercial_triggered = False
 
-    for license_name, modules in sorted(joined.modules_by_license_name.items()):
+    for i, (license_name, modules) in enumerate(sorted(joined.modules_by_license_name.items())):
         module_output = ""
         module_names = []
         for module in modules:
@@ -229,13 +231,20 @@ if __name__ == "__main__":
             warning = commercial_warning
             commercial_triggered = True
 
-        print("{0}{1}\n{2}".format(license_name, warning, module_output))
+        if i > 0:
+            print("")
+
+        print("{0}{1}\n{2}".format(license_name, warning, module_output.rstrip()))
 
     if gpl_triggered or commercial_triggered:
         print("ERROR: One or more conditions were triggered (e.g. GPL-licensed/Commercially licensed packages detected; cannot continue")
         exit(1)
 
-    print("\nworking on {0}...\n".format(args.output_file))
+    print("")
+    print("--- --- --- ---")
+    print("")
+
+    print("working on {0}...\n".format(args.output_file))
 
     third_party_licenses = []
 
@@ -271,4 +280,4 @@ if __name__ == "__main__":
     with codecs.open(args.output_file, "w", "utf-8") as f:
         f.write(data.strip() + "\n")
 
-    print("Done; see output at {0}".format(repr(args.output_file)))
+    print("Done; see output at {0}".format(repr(os.path.abspath(args.output_file))))

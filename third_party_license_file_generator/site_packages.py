@@ -9,6 +9,7 @@ import platform
 from codecs import open
 
 from third_party_license_file_generator.licenses import (
+    attempt_to_infer_license_from_license_file_data,
     build_license_file_for_author,
     get_license_from_github_home_page_scrape,
     get_license_from_pypi_license_scrape,
@@ -203,12 +204,14 @@ class SitePackages(object):
         # We don't expect to encounter a situation where this presents an issue, but it might.
         # Add some logging for this case.
         if metadata_dict.get(key, None) is not None:
-            print("INFO: For METADATA {} key {} is already set in parsed metadata. Changing value from {} to {}".format(
-                metadata_path,
-                key,
-                metadata_dict[key],
-                value,
-            ))
+            print(
+                "\nINFO: For METADATA {}\n\tkey {} is already set in parsed metadata. Changing value from {} to {}".format(
+                    repr(metadata_path),
+                    repr(key),
+                    repr(metadata_dict[key]),
+                    repr(value),
+                )
+            )
         metadata_dict[key] = value
 
     def _read_metadata(self, metadata_path):
@@ -242,31 +245,29 @@ class SitePackages(object):
                 metadata["author"] = metadata["author"].strip()
             elif key == "Home-page":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(metadata_path=metadata_path,
-                                              metadata_dict=metadata,
-                                              key="home_page",
-                                              value=value)
+                self._set_metadata_dict_value(metadata_path=metadata_path, metadata_dict=metadata, key="home_page", value=value)
             elif key == "License":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(metadata_path=metadata_path,
-                                              metadata_dict=metadata,
-                                              key="license_name",
-                                              value=value)
+                self._set_metadata_dict_value(metadata_path=metadata_path, metadata_dict=metadata, key="license_name", value=value)
             elif line.startswith(_TOML_METADATA_HOMEPAGE_PREFIX):
                 # Used for pyproject.toml metadata packages
                 # Line example: Project-URL: Homepage, https://github.com/carltongibson/django-filter/tree/main
-                self._set_metadata_dict_value(metadata_path=metadata_path,
-                                              metadata_dict=metadata,
-                                              key="home_page",
-                                              value=line.split(_TOML_METADATA_HOMEPAGE_PREFIX)[-1])
+                self._set_metadata_dict_value(
+                    metadata_path=metadata_path,
+                    metadata_dict=metadata,
+                    key="home_page",
+                    value=line.split(_TOML_METADATA_HOMEPAGE_PREFIX)[-1],
+                )
             elif line.startswith(_TOML_METADATA_LICENSE_PREFIX):
                 # Used for pyproject.toml metadata packages
                 # Line example:
                 # Classifier: License :: OSI Approved :: MIT License
-                self._set_metadata_dict_value(metadata_path=metadata_path,
-                                              metadata_dict=metadata,
-                                              key="license_name",
-                                              value=line.split(_TOML_METADATA_LICENSE_PREFIX)[-1])
+                self._set_metadata_dict_value(
+                    metadata_path=metadata_path,
+                    metadata_dict=metadata,
+                    key="license_name",
+                    value=line.split(_TOML_METADATA_LICENSE_PREFIX)[-1],
+                )
             elif key == "Requires-Dist":
                 if ";" not in value:
                     module_name = value.split("(")[0].split("<")[0].split(">")[0].split("=")[0].strip()
@@ -290,21 +291,60 @@ class SitePackages(object):
                     continue
 
             metadata = None
+            metadata_path = None
             license_file = None
+            license_file_path = None
+
             for sub_thing in os.listdir(path_to_thing):
                 path_to_sub_thing = os.path.join(path_to_thing, sub_thing)
                 if not os.path.isfile(path_to_sub_thing):
                     continue
 
                 if sub_thing == "METADATA" or sub_thing == "PKG-INFO":
-                    metadata = self._read_metadata(path_to_sub_thing)
-                elif "LICENSE" in sub_thing or "COPYING" in sub_thing:
-                    license_file = self._read_license(path_to_sub_thing)
+                    if metadata is None:
+                        metadata = self._read_metadata(path_to_sub_thing)
+                        if metadata is not None:
+                            metadata_path = path_to_sub_thing
+                elif "LICENSE" in sub_thing or "COPYING" in sub_thing or "LICENCE" in sub_thing:
+                    if license_file is None:
+                        license_file = self._read_license(path_to_sub_thing)
+                        license_file_path = path_to_sub_thing
+
+            if license_file is None:
+                licences_folder_path_a = os.path.join(path_to_thing, "licenses")
+                licences_folder_path_b = os.path.join(path_to_thing, "licences")
+                for licences_folder_path in [licences_folder_path_a, licences_folder_path_b]:
+                    if os.path.exists(licences_folder_path) and os.path.isdir(licences_folder_path):
+                        for sub_thing in os.listdir(licences_folder_path):
+                            path_to_sub_thing = os.path.join(licences_folder_path, sub_thing)
+
+                            if not os.path.isfile(path_to_sub_thing):
+                                continue
+
+                            if "LICENSE" in sub_thing or "COPYING" in sub_thing or "LICENCE" in sub_thing:
+                                if license_file is None:
+                                    license_file = self._read_license(path_to_sub_thing)
+                                    license_file_path = path_to_sub_thing
 
             if metadata is None:
                 continue
 
             module_name = metadata["module_name"]
+
+            if not metadata.get("license_name"):
+                possible_license_name = attempt_to_infer_license_from_license_file_data(license_file)
+                if possible_license_name:
+                    print(
+                        "\nINFO: For METADATA {}\n\tkey {} was empty / unset. Changing value from {} to {} (inferred by reading {})".format(
+                            repr(metadata_path),
+                            repr("license_name"),
+                            repr(metadata["license_name"]),
+                            repr(possible_license_name),
+                            repr(license_file_path),
+                        )
+                    )
+
+                    metadata["license_name"] = possible_license_name
 
             if module_name in self._root_module_names or module_name in self._required_module_names:
                 for required_module_name in metadata["requires"]:
@@ -345,17 +385,17 @@ class SitePackages(object):
             author = metadata["author"]
             home_page = metadata["home_page"]
 
-            overriden_license_name = None
-            overriden_license_file = None
+            overridden_license_name = None
+            overridden_license_file = None
 
             license_override = self._license_overrides.get(module_name)
             if license_override:
-                overriden_license_name = license_override.get("license_name")
-                overriden_license_file = license_override.get("license_file")
+                overridden_license_name = license_override.get("license_name")
+                overridden_license_file = license_override.get("license_file")
 
-            if None not in [overriden_license_name, overriden_license_file]:
-                license_name = overriden_license_name
-                license_file = overriden_license_file
+            if None not in [overridden_license_name, overridden_license_file]:
+                license_name = overridden_license_name
+                license_file = overridden_license_file
             else:
                 original_license_name = metadata["license_name"]
                 license_file = self._module_licenses_by_module_name.get(module_name)

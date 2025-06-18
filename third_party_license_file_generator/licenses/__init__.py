@@ -43,6 +43,25 @@ license_files = {
     "python-2.0": python_2_0,
 }
 
+license_friendly = {
+    "apache-1.1": "Apache-1.1",
+    "apache-2.0": "Apache-2.0",
+    "bsd-2-clause": "BSD-2-clause",
+    "bsd-3-clause": "BSD-3-clause",
+    "commercial": "Commercial",
+    "gpl-2.0": "GPL-2.0",
+    "gpl-3.0": "GPL-3.0",
+    "isc": "ISC",
+    "lgpl-2.1": "LGPL-2.1",
+    "lgpl-3.0": "LGPL-3.0",
+    "mit": "MIT",
+    "mpl-1.0": "MPL-1.0",
+    "mpl-1.1": "MPL-1.1",
+    "mpl-2.0": "MPL-2.0",
+    "pil": "PIL",
+    "python-2.0": "Python-2.0",
+}
+
 
 def _safe_check(source, match):
     if re.match("[A-UW-Za-uw-z]{0}".format(match), source) is not None:
@@ -126,6 +145,9 @@ def get_license_from_github_home_page_scrape(url):
         "LICENSE",
         "LICENSE.txt",
         "LICENSE.md",
+        "LICENCE",
+        "LICENCE.txt",
+        "LICENCE.md",
     ]
 
     license_file = None
@@ -157,3 +179,28 @@ def build_license_file_for_author(author, license_name):
     return "NOTE: This module was missing a license file (despite listing a license name) so one has been auto-generated\n\n{0}".format(
         license_file.strip()
     )
+
+
+def attempt_to_infer_license_from_license_file_data(license_file_data):
+    # the word "commercial" is likely to appear in many licences, so we can't infer with it
+    licence_names_to_potentially_infer_from = [x for x in license_files.keys() if x != "commercial"]
+
+    for licence_name in license_files.keys():
+        variations = [
+            licence_name,
+            licence_name.upper(),
+            licence_name.lower(),
+            licence_name.replace("-", " "),
+            licence_name.replace("-", " ").upper(),
+            licence_name.replace("-", " ").lower(),
+        ]
+
+        for variation in variations:
+            if variation in license_file_data:
+                return license_friendly[licence_name]
+
+            if variation in license_file_data.upper():
+                return license_friendly[licence_name]
+
+            if variation in license_file_data.lower():
+                return license_friendly[licence_name]
