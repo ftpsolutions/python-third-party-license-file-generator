@@ -23,8 +23,6 @@ try:
 except Exception:
     pass
 
-now = datetime.datetime.now()
-
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
@@ -36,12 +34,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=getenv("VERSION_OVERRIDE")
-    or "{}.{}.{}".format(
-        now.year,
-        now.month,
-        now.day,
-    ),
+    version="2025.6.20",
     description='The Python third_party_license_file_generator is aimed at distilling down the appropriate license for one or many pip "requirements" files into a single file; it supports Python2.7 and Python3.',
     long_description=long_description,
     long_description_content_type="text/markdown",

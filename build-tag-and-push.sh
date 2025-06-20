@@ -19,4 +19,4 @@ if [[ "${SKIP_PUSH}" == "1" ]]; then
     command="python setup.py sdist && ls -al dist/*"
 fi
 
-docker run --rm --name "${container}" -e "VERSION_OVERRIDE=${VERSION}" -v "${HOME}/.pypirc:/root/.pypirc" --workdir "/srv/python-third-party-license-file-generator" --entrypoint bash "${image}" -c "${command}"
+docker run --rm --name "${container}" -v "${HOME}/.pypirc:/root/.pypirc" --workdir "/srv/python-third-party-license-file-generator" --entrypoint bash "${image}" -c "${command}"
