@@ -182,6 +182,9 @@ def build_license_file_for_author(author, license_name):
 
 
 def attempt_to_infer_license_from_license_file_data(license_file_data):
+    if not license_file_data:
+        return None
+
     # the word "commercial" is likely to appear in many licences, so we can't infer with it
     licence_names_to_potentially_infer_from = [x for x in license_files.keys() if x != "commercial"]
 
