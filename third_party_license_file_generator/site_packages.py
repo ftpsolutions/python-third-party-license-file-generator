@@ -8,6 +8,9 @@ import signal
 import subprocess
 import platform
 from codecs import open
+import sys
+if sys.version_info.major >= 3:
+    from dom_toml import load;
 
 from third_party_license_file_generator.licenses import (
     attempt_to_infer_license_from_license_file_data,
@@ -149,6 +152,24 @@ class SitePackages(object):
             modules_by_license_name[module.license_name] += [module]
 
         return modules_by_license_name
+
+    def _read_pyproject_toml(self, requirements_path):
+        data = load(requirements_path)
+
+        deps = data.get("project", {}).get("dependencies")
+        if deps is None:
+            print("No dependencies found in {}".format(repr(requirements_path)))
+        else:
+            for line in deps:
+                matches = [x for x in re.finditer(r"(^[\w|-|_]+).*$", line)]
+
+                for match in matches:
+                    if not match:
+                        continue
+
+                    for group in match.groups():
+                        self._root_module_names.add(group)
+                
 
     def _read_requirements(self, requirements_path):
         with open(requirements_path, "r") as f:
@@ -452,7 +473,13 @@ class SitePackages(object):
                 _module_cache[module_name] = module
 
     def run(self):
-        self._read_requirements(self._requirements_path)
+        if self._requirements_path.endswith(".toml"):
+            if load is not None:
+                self._read_pyproject_toml(self._requirements_path)
+            else:
+                raise ValueError("TOML not supported for Python 2")
+        else:
+            self._read_requirements(self._requirements_path)
 
         while True:
             last_root_module_names = self._root_module_names.copy()
