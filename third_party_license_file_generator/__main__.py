@@ -31,7 +31,7 @@ parser.add_argument(
     "--requirements-path",
     action="append",
     required=True,
-    help="a pip requirements file to use",
+    help="a pip requirements file or pyproject.toml to use",
 )
 
 parser.add_argument(
@@ -157,6 +157,10 @@ if __name__ == "__main__":
                 sys.exit(1)
 
             license_override["license_file"] = actual_license_file
+
+    if sys.version_info.major < 3 and any([x for x in args.requirements_path if x.strip().endswith(".toml")]):
+        print("TOML files not supported by this tool under Python 2")
+        sys.exit(1)
 
     pairs = tuple(
         zip(
