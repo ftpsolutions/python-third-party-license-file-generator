@@ -76,6 +76,7 @@ setup(
         [
             "requests>=2.25",
             "PyYAML>=5.4",
+            "dom_toml>=2.1.0"
         ]
         if python3
         else [
