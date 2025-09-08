@@ -4,6 +4,7 @@ The Python third_party_license_file_generator is aimed at distilling down the ap
 
 ## Thanks to everyone who has contributed over the years!
 
+- [marcoYxz](https://github.com/marcoYxz)
 - [fredvisser](https://github.com/fredvisser)
 - [Brian-Williams](https://github.com/Brian-Williams)
 - [andzn](https://github.com/andzn)
