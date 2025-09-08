@@ -7,6 +7,7 @@ WORKDIR /srv/
 RUN pip install twine setuptools
 
 COPY ./requirements.txt /srv/python-third-party-license-file-generator/requirements.txt
+COPY ./pyproject.toml /srv/python-third-party-license-file-generator/pyproject.toml
 
 RUN pip install -r /srv/python-third-party-license-file-generator/requirements.txt
 
