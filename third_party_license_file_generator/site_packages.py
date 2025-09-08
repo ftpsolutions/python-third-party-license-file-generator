@@ -9,8 +9,9 @@ import subprocess
 import platform
 from codecs import open
 import sys
+
 if sys.version_info.major >= 3:
-    from dom_toml import load;
+    from dom_toml import load
 
 from third_party_license_file_generator.licenses import (
     attempt_to_infer_license_from_license_file_data,
@@ -27,7 +28,9 @@ _TOML_METADATA_LICENSE_PREFIX = "Classifier: License :: OSI Approved :: "
 
 
 def _pre_exec():
-    signal.signal(signal.SIGINT, signal.SIG_IGN)  # to ignore CTRL+C signal in the new process
+    signal.signal(
+        signal.SIGINT, signal.SIG_IGN
+    )  # to ignore CTRL+C signal in the new process
 
 
 def _run_subprocess(command_line):
@@ -93,7 +96,9 @@ class Module(object):
                 [
                     "{0}={1}".format(
                         x,
-                        repr(getattr(self, x))[0:50] + "..." if len(repr(getattr(self, x))) > 50 else repr(getattr(self, x)),
+                        repr(getattr(self, x))[0:50] + "..."
+                        if len(repr(getattr(self, x))) > 50
+                        else repr(getattr(self, x)),
                     )
                     for x in self.__slots__
                 ]
@@ -121,10 +126,14 @@ class SitePackages(object):
         do_not_skip_not_required_packages=False,
     ):
         self._requirements_path = requirements_path
-        self._python_path = python_path if python_path is not None else shutil.which("python3")  # noqa
+        self._python_path = (
+            python_path if python_path is not None else shutil.which("python3")
+        )  # noqa
         self._skip_prefixes = skip_prefixes
         self._use_internet = use_internet
-        self._license_overrides = license_overrides if license_overrides is not None else {}
+        self._license_overrides = (
+            license_overrides if license_overrides is not None else {}
+        )
         self._do_not_skip_not_required_packages = do_not_skip_not_required_packages
 
         self._root_module_names = set()
@@ -169,7 +178,6 @@ class SitePackages(object):
 
                     for group in match.groups():
                         self._root_module_names.add(group)
-                
 
     def _read_requirements(self, requirements_path):
         with open(requirements_path, "r") as f:
@@ -257,7 +265,9 @@ class SitePackages(object):
             "requires": [],
         }
 
-        for line in [x.strip() for x in interesting_data.split("\n") if x.strip() != ""]:
+        for line in [
+            x.strip() for x in interesting_data.split("\n") if x.strip() != ""
+        ]:
             parts = line.split(": ")
             key = parts[0].strip()
             value = ": ".join(parts[1:]).strip()
@@ -274,10 +284,20 @@ class SitePackages(object):
                 metadata["author"] = metadata["author"].strip()
             elif key == "Home-page":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(metadata_path=metadata_path, metadata_dict=metadata, key="home_page", value=value)
+                self._set_metadata_dict_value(
+                    metadata_path=metadata_path,
+                    metadata_dict=metadata,
+                    key="home_page",
+                    value=value,
+                )
             elif key == "License":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(metadata_path=metadata_path, metadata_dict=metadata, key="license_name", value=value)
+                self._set_metadata_dict_value(
+                    metadata_path=metadata_path,
+                    metadata_dict=metadata,
+                    key="license_name",
+                    value=value,
+                )
             elif line.startswith(_TOML_METADATA_HOMEPAGE_PREFIX):
                 # Used for pyproject.toml metadata packages
                 # Line example: Project-URL: Homepage, https://github.com/carltongibson/django-filter/tree/main
@@ -299,7 +319,13 @@ class SitePackages(object):
                 )
             elif key == "Requires-Dist":
                 if ";" not in value:
-                    module_name = value.split("(")[0].split("<")[0].split(">")[0].split("=")[0].strip()
+                    module_name = (
+                        value.split("(")[0]
+                        .split("<")[0]
+                        .split(">")[0]
+                        .split("=")[0]
+                        .strip()
+                    )
                     if module_name != "":
                         metadata["requires"] += [module_name]
 
@@ -314,7 +340,9 @@ class SitePackages(object):
                 continue
 
             if not thing.endswith("dist-info"):
-                if thing.endswith(".egg") and os.path.isdir(os.path.join(path_to_thing, "EGG-INFO")):
+                if thing.endswith(".egg") and os.path.isdir(
+                    os.path.join(path_to_thing, "EGG-INFO")
+                ):
                     path_to_thing = os.path.join(path_to_thing, "EGG-INFO")
                 else:
                     continue
@@ -334,7 +362,11 @@ class SitePackages(object):
                         metadata = self._read_metadata(path_to_sub_thing)
                         if metadata is not None:
                             metadata_path = path_to_sub_thing
-                elif "LICENSE" in sub_thing or "COPYING" in sub_thing or "LICENCE" in sub_thing:
+                elif (
+                    "LICENSE" in sub_thing
+                    or "COPYING" in sub_thing
+                    or "LICENCE" in sub_thing
+                ):
                     if license_file is None:
                         license_file = self._read_license(path_to_sub_thing)
                         license_file_path = path_to_sub_thing
@@ -342,15 +374,26 @@ class SitePackages(object):
             if license_file is None:
                 licences_folder_path_a = os.path.join(path_to_thing, "licenses")
                 licences_folder_path_b = os.path.join(path_to_thing, "licences")
-                for licences_folder_path in [licences_folder_path_a, licences_folder_path_b]:
-                    if os.path.exists(licences_folder_path) and os.path.isdir(licences_folder_path):
+                for licences_folder_path in [
+                    licences_folder_path_a,
+                    licences_folder_path_b,
+                ]:
+                    if os.path.exists(licences_folder_path) and os.path.isdir(
+                        licences_folder_path
+                    ):
                         for sub_thing in os.listdir(licences_folder_path):
-                            path_to_sub_thing = os.path.join(licences_folder_path, sub_thing)
+                            path_to_sub_thing = os.path.join(
+                                licences_folder_path, sub_thing
+                            )
 
                             if not os.path.isfile(path_to_sub_thing):
                                 continue
 
-                            if "LICENSE" in sub_thing or "COPYING" in sub_thing or "LICENCE" in sub_thing:
+                            if (
+                                "LICENSE" in sub_thing
+                                or "COPYING" in sub_thing
+                                or "LICENCE" in sub_thing
+                            ):
                                 if license_file is None:
                                     license_file = self._read_license(path_to_sub_thing)
                                     license_file_path = path_to_sub_thing
@@ -361,7 +404,9 @@ class SitePackages(object):
             module_name = metadata["module_name"]
 
             if not metadata.get("license_name"):
-                possible_license_name = attempt_to_infer_license_from_license_file_data(license_file)
+                possible_license_name = attempt_to_infer_license_from_license_file_data(
+                    license_file
+                )
                 if possible_license_name:
                     print(
                         "\nINFO: For METADATA {}\n\tkey {} was empty / unset. Changing value from {} to {} (inferred by reading {})".format(
@@ -375,7 +420,10 @@ class SitePackages(object):
 
                     metadata["license_name"] = possible_license_name
 
-            if module_name in self._root_module_names or module_name in self._required_module_names:
+            if (
+                module_name in self._root_module_names
+                or module_name in self._required_module_names
+            ):
                 for required_module_name in metadata["requires"]:
                     self._required_module_names.add(required_module_name)
 
@@ -434,20 +482,34 @@ class SitePackages(object):
                 github_license_file = None
                 if original_license_name not in ["Commercial"]:
                     if license_name is None and self._use_internet:
-                        pypi_license_name = get_license_from_pypi_license_scrape(module_name)
+                        pypi_license_name = get_license_from_pypi_license_scrape(
+                            module_name
+                        )
                         license_name = parse_license(pypi_license_name)
 
                         if license_name is None:
-                            if home_page is not None and "github" in home_page and self._use_internet:
-                                github_license_file = get_license_from_github_home_page_scrape(home_page)
+                            if (
+                                home_page is not None
+                                and "github" in home_page
+                                and self._use_internet
+                            ):
+                                github_license_file = (
+                                    get_license_from_github_home_page_scrape(home_page)
+                                )
                                 license_name = parse_license(github_license_file)
 
                                 if license_file is None:
                                     license_file = github_license_file
 
                 if license_file is None:
-                    if home_page is not None and github_license_file is None and self._use_internet:
-                        github_license_file = get_license_from_github_home_page_scrape(home_page)
+                    if (
+                        home_page is not None
+                        and github_license_file is None
+                        and self._use_internet
+                    ):
+                        github_license_file = get_license_from_github_home_page_scrape(
+                            home_page
+                        )
 
                     license_file = github_license_file
 
@@ -487,14 +549,19 @@ class SitePackages(object):
 
             self._read_all_module_metadatas_and_license_files()
 
-            if last_root_module_names == self._root_module_names and last_required_module_names == self._required_module_names:
+            if (
+                last_root_module_names == self._root_module_names
+                and last_required_module_names == self._required_module_names
+            ):
                 break
 
         self._read_site_packages()
 
     def __add__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError("cannot add {0} and {1}".format(self.__class__, other.__class__))
+            raise TypeError(
+                "cannot add {0} and {1}".format(self.__class__, other.__class__)
+            )
 
         result = SitePackages(
             requirements_path=None,
@@ -511,7 +578,9 @@ class SitePackages(object):
 
     def __sub__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError("cannot subtract {0} and {1}".format(self.__class__, other.__class__))
+            raise TypeError(
+                "cannot subtract {0} and {1}".format(self.__class__, other.__class__)
+            )
 
         result = SitePackages(
             requirements_path=None,

@@ -73,11 +73,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=(
-        [
-            "requests>=2.25",
-            "PyYAML>=5.4",
-            "dom_toml>=2.1.0"
-        ]
+        ["requests>=2.25", "PyYAML>=5.4", "dom_toml>=2.1.0"]
         if python3
         else [
             "requests>=2.25",

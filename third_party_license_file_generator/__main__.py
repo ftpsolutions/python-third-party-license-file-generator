@@ -137,7 +137,11 @@ if __name__ == "__main__":
             license_name = license_override.get("license_name")
             license_file = license_override.get("license_file")
             if None in [license_name, license_file]:
-                print("ERROR: license_name or license_file for license override of {0} missing or empty".format(repr(module_name)))
+                print(
+                    "ERROR: license_name or license_file for license override of {0} missing or empty".format(
+                        repr(module_name)
+                    )
+                )
                 sys.exit(1)
 
             actual_license_file = None
@@ -158,7 +162,9 @@ if __name__ == "__main__":
 
             license_override["license_file"] = actual_license_file
 
-    if sys.version_info.major < 3 and any([x for x in args.requirements_path if x.strip().endswith(".toml")]):
+    if sys.version_info.major < 3 and any(
+        [x for x in args.requirements_path if x.strip().endswith(".toml")]
+    ):
         print("TOML files not supported by this tool under Python 2")
         sys.exit(1)
 
@@ -183,7 +189,11 @@ if __name__ == "__main__":
 
     site_packages = []
     for requirements_path, python_path in pairs:
-        print("handling {0} with {1} ...".format(repr(requirements_path), repr(python_path)))
+        print(
+            "handling {0} with {1} ...".format(
+                repr(requirements_path), repr(python_path)
+            )
+        )
 
         site_packages += [
             SitePackages(
@@ -205,14 +215,14 @@ if __name__ == "__main__":
     print("")
 
     gpl_warning = " <---- !!! WARNING: you have specified not to permit GPL licenses but GPL-licensed packages were detected"
-    commercial_warning = (
-        " <---- !!! WARNING: you have specified not to permit Commercial licenses but Comercially-licensed packages were detected"
-    )
+    commercial_warning = " <---- !!! WARNING: you have specified not to permit Commercial licenses but Comercially-licensed packages were detected"
 
     gpl_triggered = False
     commercial_triggered = False
 
-    for i, (license_name, modules) in enumerate(sorted(joined.modules_by_license_name.items())):
+    for i, (license_name, modules) in enumerate(
+        sorted(joined.modules_by_license_name.items())
+    ):
         module_output = ""
         module_names = []
         for module in modules:
@@ -224,7 +234,11 @@ if __name__ == "__main__":
             )
 
         warning = ""
-        if not args.permit_gpl and license_name.startswith("GPL") and not all([x in args.gpl_exception for x in module_names]):
+        if (
+            not args.permit_gpl
+            and license_name.startswith("GPL")
+            and not all([x in args.gpl_exception for x in module_names])
+        ):
             warning = gpl_warning
             gpl_triggered = True
         elif (
@@ -241,7 +255,9 @@ if __name__ == "__main__":
         print("{0}{1}\n{2}".format(license_name, warning, module_output.rstrip()))
 
     if gpl_triggered or commercial_triggered:
-        print("ERROR: One or more conditions were triggered (e.g. GPL-licensed/Commercially licensed packages detected; cannot continue")
+        print(
+            "ERROR: One or more conditions were triggered (e.g. GPL-licensed/Commercially licensed packages detected; cannot continue"
+        )
         exit(1)
 
     print("")

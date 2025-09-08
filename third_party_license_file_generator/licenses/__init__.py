@@ -152,7 +152,11 @@ def get_license_from_github_home_page_scrape(url):
 
     license_file = None
     for possible_license in possible_licenses:
-        possible_license_url = "https://raw.githubusercontent.com/{0}/master/{1}".format(repo, possible_license)
+        possible_license_url = (
+            "https://raw.githubusercontent.com/{0}/master/{1}".format(
+                repo, possible_license
+            )
+        )
 
         try:
             r = requests.get(possible_license_url, timeout=5)
@@ -173,8 +177,12 @@ def build_license_file_for_author(author, license_name):
         return None
 
     license_file = license_file.replace("<YEAR>", str(datetime.datetime.now().year))
-    license_file = license_file.replace("<COPYRIGHT HOLDER>", author if author is not None else "(author unknown)")
-    license_file = license_file.replace("<OWNER>", author if author is not None else "(author author)")
+    license_file = license_file.replace(
+        "<COPYRIGHT HOLDER>", author if author is not None else "(author unknown)"
+    )
+    license_file = license_file.replace(
+        "<OWNER>", author if author is not None else "(author author)"
+    )
 
     return "NOTE: This module was missing a license file (despite listing a license name) so one has been auto-generated\n\n{0}".format(
         license_file.strip()
@@ -186,7 +194,9 @@ def attempt_to_infer_license_from_license_file_data(license_file_data):
         return None
 
     # the word "commercial" is likely to appear in many licences, so we can't infer with it
-    licence_names_to_potentially_infer_from = [x for x in license_files.keys() if x != "commercial"]
+    licence_names_to_potentially_infer_from = [
+        x for x in license_files.keys() if x != "commercial"
+    ]
 
     for licence_name in license_files.keys():
         variations = [
