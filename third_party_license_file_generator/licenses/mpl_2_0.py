@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""Mozilla Public License, version 2.0
+data = """Mozilla Public License, version 2.0
 1. Definitions
 1.1. “Contributor”
 means each individual or legal entity that creates, contributes to the creation of, or owns Covered Software.

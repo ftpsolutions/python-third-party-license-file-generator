@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""The MIT License
+data = """The MIT License
 
 Copyright <YEAR> <COPYRIGHT HOLDER>
 

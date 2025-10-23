@@ -14,7 +14,7 @@ if sys.version_info.major >= 3:
     from dom_toml import load
 
 from third_party_license_file_generator.licenses import (
-    attempt_to_infer_license_from_license_file_data,
+    attempt_to_infer_license_from_license_file_name_or_file_data,
     build_license_file_for_author,
     get_license_from_github_home_page_scrape,
     get_license_from_pypi_license_scrape,
@@ -96,9 +96,11 @@ class Module(object):
                 [
                     "{0}={1}".format(
                         x,
-                        repr(getattr(self, x))[0:50] + "..."
-                        if len(repr(getattr(self, x))) > 50
-                        else repr(getattr(self, x)),
+                        (
+                            repr(getattr(self, x))[0:50] + "..."
+                            if len(repr(getattr(self, x))) > 50
+                            else repr(getattr(self, x))
+                        ),
                     )
                     for x in self.__slots__
                 ]
@@ -368,12 +370,23 @@ class SitePackages(object):
                     or "LICENCE" in sub_thing
                 ):
                     if license_file is None:
-                        license_file = self._read_license(path_to_sub_thing)
-                        license_file_path = path_to_sub_thing
+                        possible_license_file = self._read_license(path_to_sub_thing)
+                        possible_license_name = attempt_to_infer_license_from_license_file_name_or_file_data(
+                            path_to_sub_thing, possible_license_file
+                        )
+                        if (
+                            possible_license_name
+                            and possible_license_name != "Commercial"
+                        ):
+                            license_file = possible_license_file
+                            license_file_path = path_to_sub_thing
 
             if license_file is None:
                 licences_folder_path_a = os.path.join(path_to_thing, "licenses")
                 licences_folder_path_b = os.path.join(path_to_thing, "licences")
+
+                possible_licence_file_paths = []
+
                 for licences_folder_path in [
                     licences_folder_path_a,
                     licences_folder_path_b,
@@ -394,9 +407,23 @@ class SitePackages(object):
                                 or "COPYING" in sub_thing
                                 or "LICENCE" in sub_thing
                             ):
-                                if license_file is None:
-                                    license_file = self._read_license(path_to_sub_thing)
-                                    license_file_path = path_to_sub_thing
+                                possible_licence_file_paths.append(path_to_sub_thing)
+
+                if license_file is None:
+                    for possible_licence_file_path in possible_licence_file_paths:
+                        possible_license_file = self._read_license(
+                            possible_licence_file_path
+                        )
+                        possible_license_name = attempt_to_infer_license_from_license_file_name_or_file_data(
+                            possible_licence_file_path, possible_license_file
+                        )
+                        if (
+                            possible_license_name is not None
+                            and possible_license_name != "Commercial"
+                        ):
+                            license_file = possible_license_file
+                            license_file_path = possible_licence_file_path
+                            break
 
             if metadata is None:
                 continue
@@ -404,8 +431,10 @@ class SitePackages(object):
             module_name = metadata["module_name"]
 
             if not metadata.get("license_name"):
-                possible_license_name = attempt_to_infer_license_from_license_file_data(
-                    license_file
+                possible_license_name = (
+                    attempt_to_infer_license_from_license_file_name_or_file_data(
+                        license_file_path, license_file
+                    )
                 )
                 if possible_license_name:
                     print(

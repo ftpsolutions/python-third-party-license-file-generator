@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""Note: This license has also been called the "New BSD License" or "Modified BSD License". See also the 2-clause BSD License.
+data = """Note: This license has also been called the "New BSD License" or "Modified BSD License". See also the 2-clause BSD License.
 
 Copyright <YEAR> <COPYRIGHT HOLDER>
 

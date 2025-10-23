@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""Mozilla Public License Version 1.0
+data = """Mozilla Public License Version 1.0
 1. Definitions.
 
 1.1. "Contributor" means each entity that creates or contributes to the creation of Modifications.

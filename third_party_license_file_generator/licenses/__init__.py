@@ -62,6 +62,36 @@ license_friendly = {
     "python-2.0": "Python-2.0",
 }
 
+assert set(license_friendly.keys()) == set(license_files.keys())
+
+_MIT_BLURB = """Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions"""
+
+text_to_license = {
+    "Apache Software License": "apache-1.1",
+    "Apache License Version 2.0": "apache-2.0",
+    "2-Clause BSD License": "bsd-2-clause",
+    "New BSD License": "bsd-3-clause",
+    "Modified BSD License": "bsd-3-clause",
+    "BSD 3-Clause License": "bsd-3-clause",
+    "__COMMERCIAL_MAGIC_TOKEN_COMMERCIAL__": "commercial",
+    "GNU GENERAL PUBLIC LICENSE Version 2": "gpl-2.0",
+    "GNU GENERAL PUBLIC LICENSE Version 3": "gpl-3.0",
+    "ISC License": "isc",
+    "GNU Lesser General Public License Version 2.1": "lgpl-2.1",
+    "GNU LESSER GENERAL PUBLIC LICENSE Version 3": "lgpl-3.0",
+    "MIT License": "mit",
+    "MIT No Attribution": "mit",
+    _MIT_BLURB: "mit",
+    "Mozilla Public License Version 1.0": "mpl-1.0",
+    "Mozilla Public License 1.1": "mpl-1.1",
+    "Mozilla Public License version 2.0": "mpl-2.0",
+    "Python Imaging Library": "pil",
+    "Python License Version 2": "python-2.0",
+    "PSF License Version 2": "python-2.0",
+}
+
+assert set(text_to_license.values()) == set(license_files.keys())
+
 
 def _safe_check(source, match):
     if re.match("[A-UW-Za-uw-z]{0}".format(match), source) is not None:
@@ -160,7 +190,7 @@ def get_license_from_github_home_page_scrape(url):
 
         try:
             r = requests.get(possible_license_url, timeout=5)
-        except Exception:
+        except Exception as e:
             return None
 
         if r.status_code != 200:
@@ -189,31 +219,39 @@ def build_license_file_for_author(author, license_name):
     )
 
 
-def attempt_to_infer_license_from_license_file_data(license_file_data):
-    if not license_file_data:
+def attempt_to_infer_license_from_license_file_name_or_file_data(
+    license_file_name, license_file_data
+):
+    if not license_file_name and not license_file_data:
         return None
 
-    # the word "commercial" is likely to appear in many licences, so we can't infer with it
-    licence_names_to_potentially_infer_from = [
-        x for x in license_files.keys() if x != "commercial"
-    ]
+    # first try for a file name match
+    if isinstance(license_file_name, str):
+        for licence_name in license_files.keys():
+            if licence_name == "commercial":
+                continue
 
-    for licence_name in license_files.keys():
-        variations = [
-            licence_name,
-            licence_name.upper(),
-            licence_name.lower(),
-            licence_name.replace("-", " "),
-            licence_name.replace("-", " ").upper(),
-            licence_name.replace("-", " ").lower(),
-        ]
-
-        for variation in variations:
-            if variation in license_file_data:
+            if license_file_name.endswith(licence_name):
                 return license_friendly[licence_name]
 
-            if variation in license_file_data.upper():
+    # otherwise see if the licence is mentioned in the file
+    if isinstance(license_file_data, str):
+        license_file_data_1 = " ".join(license_file_data.split())
+        license_file_data_2 = license_file_data_1.replace(",", " ")
+
+        for text, licence_name in text_to_license.items():
+            if licence_name == "commercial":
+                continue
+
+            if (
+                text.upper() in license_file_data_1.upper()
+                or text.upper() in license_file_data_2.upper()
+            ):
                 return license_friendly[licence_name]
 
-            if variation in license_file_data.lower():
-                return license_friendly[licence_name]
+        for licence_name, licence_name_friendly in license_friendly.items():
+            if licence_name == "commercial":
+                continue
+
+            if " " + licence_name_friendly + " " in license_file_data:
+                return licence_name_friendly

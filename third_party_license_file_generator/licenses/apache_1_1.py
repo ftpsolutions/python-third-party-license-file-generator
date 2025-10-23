@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""Apache Software License
+data = """Apache Software License
 Version 1.1
 
 Copyright (c) 2000 The Apache Software Foundation. All rights reserved.

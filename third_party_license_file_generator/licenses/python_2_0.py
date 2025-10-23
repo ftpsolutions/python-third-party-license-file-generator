@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""Python License, Version 2 (Python-2.0)
+data = """Python License, Version 2 (Python-2.0)
 
 PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
 --------------------------------------------

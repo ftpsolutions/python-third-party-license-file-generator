@@ -16,7 +16,7 @@ if ! test -e THIRDPARTYLICENSES; then
     exit 1
 fi
 
-python3 /srv/python-third-party-license-file-generator/check_third_party_licenses.py
+python3 -u /srv/python-third-party-license-file-generator/check_third_party_licenses.py
 
 rm THIRDPARTYLICENSES
 
@@ -36,5 +36,5 @@ then
         exit 1
     fi
 
-    python3 /srv/python-third-party-license-file-generator/check_third_party_licenses.py
+    python3 -u /srv/python-third-party-license-file-generator/check_third_party_licenses.py
 fi

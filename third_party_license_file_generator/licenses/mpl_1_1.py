@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""Mozilla Public License 1.1 (MPL-1.1)
+data = """Mozilla Public License 1.1 (MPL-1.1)
 1. Definitions.
 
 1.0.1. "Commercial Use" means distribution or otherwise making the Covered Code available to a third party.

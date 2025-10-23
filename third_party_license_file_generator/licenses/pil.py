@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""The Python Imaging Library (PIL) is
+data = """The Python Imaging Library (PIL) is
 
     Copyright © 1997-2011 by Secret Labs AB
     Copyright © 1995-2011 by Fredrik Lundh

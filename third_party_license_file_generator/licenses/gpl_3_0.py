@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-data = u"""GNU GENERAL PUBLIC LICENSE
+data = """GNU GENERAL PUBLIC LICENSE
 Version 3, 29 June 2007
 
 Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
