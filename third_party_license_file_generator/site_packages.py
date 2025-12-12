@@ -265,6 +265,9 @@ class SitePackages(object):
             "home_page": None,
             "license_name": None,
             "requires": [],
+            # top_level is not found in the metadata file,
+            # but declaring here so the key's lifetime is linked to the metadata dict
+            "top_level": [],
         }
 
         for line in [
@@ -333,6 +336,12 @@ class SitePackages(object):
 
         return metadata
 
+    @staticmethod
+    def _read_top_level(top_level_path):
+        with open(top_level_path, "r") as f:
+            data = f.read()
+        return [x for x in data.split("\n") if x]
+
     def _read_all_module_metadatas_and_license_files(self):
         site_packages_path = self._get_site_packages_folder()
 
@@ -353,6 +362,7 @@ class SitePackages(object):
             metadata_path = None
             license_file = None
             license_file_path = None
+            top_level = None
 
             for sub_thing in os.listdir(path_to_thing):
                 path_to_sub_thing = os.path.join(path_to_thing, sub_thing)
@@ -380,6 +390,11 @@ class SitePackages(object):
                         ):
                             license_file = possible_license_file
                             license_file_path = path_to_sub_thing
+                elif sub_thing == "top_level.txt":
+                    # Some packages include this file - it's useful when the top level import is different
+                    # to the package name, e.g. mysql_connector offers mysql as a top level import.
+                    # Newline separated list of top level imported packages
+                    top_level = self._read_top_level(path_to_sub_thing)
 
             if license_file is None:
                 licences_folder_path_a = os.path.join(path_to_thing, "licenses")
@@ -430,6 +445,11 @@ class SitePackages(object):
 
             module_name = metadata["module_name"]
 
+            if top_level is not None:
+                if module_name not in top_level:
+                    print("INFO: {} has imports not overlapping with the module name {}".format(module_name, top_level))
+                metadata["top_level"] = top_level
+
             if not metadata.get("license_name"):
                 possible_license_name = (
                     attempt_to_infer_license_from_license_file_name_or_file_data(
@@ -469,10 +489,12 @@ class SitePackages(object):
 
     def _read_site_packages(self):
         for module_name, metadata in self._module_metadatas_by_module_name.items():
+            # Account for the fact that the provided top level imports may not match the module name
+            possible_module_names = [module_name] + metadata.get("top_level", [])
             if (
                 not self._do_not_skip_not_required_packages
-                and module_name not in self._root_module_names
-                and module_name not in self._required_module_names
+                and all([name not in self._root_module_names for name in possible_module_names])
+                and all([name not in self._required_module_names for name in possible_module_names])
             ):
                 continue
 
