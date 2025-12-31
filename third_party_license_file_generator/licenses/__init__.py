@@ -183,6 +183,11 @@ def parse_license(raw_license):
             return "ZPL-2.1"
         # There are earlier ZPL licenses, but I'm hoping they just aren't use
         # return nothing and use the unknown handling on a per-case basis
+    elif _safe_check(compare_license, "HPND"):
+        # https://spdx.org/licenses/HPND.html
+        # Note there's no generic license text - we always use the text
+        # from the package as it's a customized template
+        return "HPND"
     elif _safe_check(compare_license, "Commercial"):
         return "Commercial"
     elif _safe_check(compare_license, "Unknown (assumed commercial)"):
