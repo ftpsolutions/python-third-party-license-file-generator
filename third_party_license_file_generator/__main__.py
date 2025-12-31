@@ -214,7 +214,7 @@ if __name__ == "__main__":
     print("--- --- --- ---")
     print("")
 
-    gpl_warning = " <---- !!! WARNING: you have specified not to permit GPL licenses but GPL-licensed packages were detected"
+    gpl_warning = " <---- !!! WARNING: you have specified not to permit GPL licenses but AGPL/GPL-licensed packages were detected"
     commercial_warning = " <---- !!! WARNING: you have specified not to permit Commercial licenses but Comercially-licensed packages were detected"
 
     gpl_triggered = False
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         warning = ""
         if (
             not args.permit_gpl
-            and license_name.startswith("GPL")
+            and license_name.startswith("GPL") or license_name.startswith("AGPL")
             and not all([x in args.gpl_exception for x in module_names])
         ):
             warning = gpl_warning
