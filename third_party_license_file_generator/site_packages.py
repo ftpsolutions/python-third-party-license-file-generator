@@ -116,6 +116,87 @@ class LicenseError(Exception):
     pass
 
 
+class Metadata(object):
+
+    def __init__(self, metadata_path):
+        self._metadata_path = metadata_path
+        # Handy for debugging when a license isn't captured as hoped
+        print("Collecting metadata for path: {}".format(metadata_path))
+        self._module_name = None
+        self._author = None
+        self._home_page = None
+        self._license_names = []
+        self._requires = []
+        self._top_level = []
+
+    def set_module_name(self, module_name):
+        self._module_name = module_name
+
+    def get_module_name(self):
+        return self._module_name
+    def set_author(self, author):
+        self._author = author
+
+    def get_author(self):
+        return self._author
+
+    def set_home_page(self, home_page):
+        self._home_page = home_page
+
+    def get_home_page(self):
+        return self._home_page
+
+    def add_license_name(self, license_name):
+        # It's common to have the license_name to be specified twice in the metadata, consider the following
+        # extract:
+        #
+        # Metadata-Version: 2.4
+        # License: ZPL-2.1
+        # Keywords: interface,components,plugins
+        # Classifier: License :: OSI Approved :: Zope Public License
+        #
+        # In previous versions of the code the last one defined would win, i.e. Zope Public License in this case
+        # However, we can see that information is lost. It's assumed that the later definition under the
+        # Classifier section may sometimes be more accurate. Thus we keep track of all license name references
+        # so they are all available later when do license analysis
+        print("Adding license name: {} from metadata: {}".format(license_name, self._metadata_path))
+        self._license_names.append(license_name)
+
+    def get_license_names(self):
+        return self._license_names
+
+    def add_requires(self, require_entry):
+        self._requires.append(require_entry)
+
+    def get_requires(self):
+        return self._requires
+
+    def set_top_level(self, top_level):
+        # top_level is not found in the metadata file,
+        # but declaring along with the metadata so the lifetime is linked to this object
+        self._top_level = top_level
+
+    def get_top_level(self):
+        return self._top_level
+
+    def _set_metadata_dict_value(self, key, value):
+        # In the implementation of the metadata parsing we look for keys that are present in
+        # older style setup.py metadata AND newer style pyproject.toml metadata.
+        # We don't expect to encounter a situation where this presents an issue, but it might.
+        # Add some logging for this case.
+        current_value = getattr(self, key, None)
+        if current_value is not None:
+            print(
+                "\nINFO: For METADATA {}\n\tkey {} is already set in parsed metadata. Changing value from {} to {}".format(
+                    repr(self._metadata_path),
+                    repr(key),
+                    repr(current_value),
+                    repr(value),
+                )
+            )
+        setattr(self, key, value)
+
+
 class SitePackages(object):
     def __init__(
         self,
@@ -236,39 +317,13 @@ class SitePackages(object):
 
         return site_packages_path
 
-    @staticmethod
-    def _set_metadata_dict_value(metadata_path, metadata_dict, key, value):
-        # In the implementation of the metadata parsing we look for keys that are present in
-        # older style setup.py metadata AND newer style pyproject.toml metadata.
-        # We don't expect to encounter a situation where this presents an issue, but it might.
-        # Add some logging for this case.
-        if metadata_dict.get(key, None) is not None:
-            print(
-                "\nINFO: For METADATA {}\n\tkey {} is already set in parsed metadata. Changing value from {} to {}".format(
-                    repr(metadata_path),
-                    repr(key),
-                    repr(metadata_dict[key]),
-                    repr(value),
-                )
-            )
-        metadata_dict[key] = value
-
     def _read_metadata(self, metadata_path):
         with open(metadata_path, "r", encoding="utf-8") as f:
             data = f.read().replace("\r\n", "\n")
 
         interesting_data = data.split("\n\n")[0].strip()
 
-        metadata = {
-            "module_name": None,
-            "author": None,
-            "home_page": None,
-            "license_name": None,
-            "requires": [],
-            # top_level is not found in the metadata file,
-            # but declaring here so the key's lifetime is linked to the metadata dict
-            "top_level": [],
-        }
+        metadata = Metadata(metadata_path=metadata_path)
 
         for line in [
             x.strip() for x in interesting_data.split("\n") if x.strip() != ""
@@ -278,50 +333,35 @@ class SitePackages(object):
             value = ": ".join(parts[1:]).strip()
 
             if key == "Name":
-                metadata["module_name"] = value
+                metadata.set_module_name(value)
             elif key == "Author":
-                metadata["author"] = value
+                metadata.set_author(value)
             elif key == "Author-email":
-                if metadata["author"] is None:
-                    metadata["author"] = "(unknown)"
+                if metadata.get_author() is None:
+                    metadata.set_author("(unknown)")
 
-                metadata["author"] += " <{0}>".format(value)
-                metadata["author"] = metadata["author"].strip()
+                author = metadata.get_author()
+                author += " <{0}>".format(value)
+                metadata.set_author(author.strip())
             elif key == "Home-page":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(
-                    metadata_path=metadata_path,
-                    metadata_dict=metadata,
-                    key="home_page",
-                    value=value,
-                )
+                metadata.set_home_page(value)
             elif key == "License":
                 # Used for setup.py metadata packages
-                self._set_metadata_dict_value(
-                    metadata_path=metadata_path,
-                    metadata_dict=metadata,
-                    key="license_name",
-                    value=value,
-                )
+                metadata.add_license_name(value)
+            elif key == "License-Expression":
+                # Used for setup.py metadata packages
+                # Some packages prefer this over the License key
+                metadata.add_license_name(value)
             elif line.startswith(_TOML_METADATA_HOMEPAGE_PREFIX):
                 # Used for pyproject.toml metadata packages
                 # Line example: Project-URL: Homepage, https://github.com/carltongibson/django-filter/tree/main
-                self._set_metadata_dict_value(
-                    metadata_path=metadata_path,
-                    metadata_dict=metadata,
-                    key="home_page",
-                    value=line.split(_TOML_METADATA_HOMEPAGE_PREFIX)[-1],
-                )
+                metadata.set_home_page(line.split(_TOML_METADATA_HOMEPAGE_PREFIX)[-1])
             elif line.startswith(_TOML_METADATA_LICENSE_PREFIX):
                 # Used for pyproject.toml metadata packages
                 # Line example:
                 # Classifier: License :: OSI Approved :: MIT License
-                self._set_metadata_dict_value(
-                    metadata_path=metadata_path,
-                    metadata_dict=metadata,
-                    key="license_name",
-                    value=line.split(_TOML_METADATA_LICENSE_PREFIX)[-1],
-                )
+                metadata.add_license_name(line.split(_TOML_METADATA_LICENSE_PREFIX)[-1])
             elif key == "Requires-Dist":
                 if ";" not in value:
                     module_name = (
@@ -332,7 +372,7 @@ class SitePackages(object):
                         .strip()
                     )
                     if module_name != "":
-                        metadata["requires"] += [module_name]
+                        metadata.add_requires(module_name)
 
         return metadata
 
@@ -372,8 +412,7 @@ class SitePackages(object):
                 if sub_thing == "METADATA" or sub_thing == "PKG-INFO":
                     if metadata is None:
                         metadata = self._read_metadata(path_to_sub_thing)
-                        if metadata is not None:
-                            metadata_path = path_to_sub_thing
+                        metadata_path = path_to_sub_thing
                 elif (
                     "LICENSE" in sub_thing
                     or "COPYING" in sub_thing
@@ -443,14 +482,14 @@ class SitePackages(object):
             if metadata is None:
                 continue
 
-            module_name = metadata["module_name"]
+            module_name = metadata.get_module_name()
 
             if top_level is not None:
                 if module_name not in top_level:
                     print("INFO: {} has imports not overlapping with the module name {}".format(module_name, top_level))
-                metadata["top_level"] = top_level
+                metadata.set_top_level(top_level)
 
-            if not metadata.get("license_name"):
+            if not metadata.get_license_names():
                 possible_license_name = (
                     attempt_to_infer_license_from_license_file_name_or_file_data(
                         license_file_path, license_file
@@ -461,19 +500,19 @@ class SitePackages(object):
                         "\nINFO: For METADATA {}\n\tkey {} was empty / unset. Changing value from {} to {} (inferred by reading {})".format(
                             repr(metadata_path),
                             repr("license_name"),
-                            repr(metadata["license_name"]),
+                            repr(metadata.get_license_names()),
                             repr(possible_license_name),
                             repr(license_file_path),
                         )
                     )
 
-                    metadata["license_name"] = possible_license_name
+                    metadata.add_license_name(possible_license_name)
 
             if (
                 module_name in self._root_module_names
                 or module_name in self._required_module_names
             ):
-                for required_module_name in metadata["requires"]:
+                for required_module_name in metadata.get_requires():
                     self._required_module_names.add(required_module_name)
 
             self._module_metadatas_by_module_name[module_name] = metadata
@@ -490,7 +529,7 @@ class SitePackages(object):
     def _read_site_packages(self):
         for module_name, metadata in self._module_metadatas_by_module_name.items():
             # Account for the fact that the provided top level imports may not match the module name
-            possible_module_names = [module_name] + metadata.get("top_level", [])
+            possible_module_names = [module_name] + metadata.get_top_level()
             if (
                 not self._do_not_skip_not_required_packages
                 and all([name not in self._root_module_names for name in possible_module_names])
@@ -510,8 +549,8 @@ class SitePackages(object):
                 self._modules_by_module_name[module_name] = module
                 continue
 
-            author = metadata["author"]
-            home_page = metadata["home_page"]
+            author = metadata.get_author()
+            home_page = metadata.get_home_page()
 
             overridden_license_name = None
             overridden_license_file = None
@@ -525,10 +564,28 @@ class SitePackages(object):
                 license_name = overridden_license_name
                 license_file = overridden_license_file
             else:
-                original_license_name = metadata["license_name"]
-                license_file = self._module_licenses_by_module_name.get(module_name)
+                original_license_name = None
+                license_name = None
 
-                license_name = parse_license(original_license_name)
+                for ln in metadata.get_license_names():
+                    # Iterate through the licenses until we find a non null result.
+                    # parse_license() _mostly_ looks for a specific format, i.e. LIC-X,
+                    # e.g. GPL-3.0, ZPL-2.1
+                    # It's possible in the metadata license names to have variations like
+                    # "Zope Public License" which misses all of the checks, plus it's missing
+                    # license version info. It's been observed, in these cases there will
+                    # be a second entry matching the format that we expect - so we prefer that.
+                    # No doubt more edge cases will arise later since there are no guarantees on
+                    # what goes into a package's metadata - applying YAGNI
+                    original_license_name = ln
+                    license_name = parse_license(ln)
+                    if license_name is not None:
+                        break
+
+                # Note in the event of failure to match, the last original_license_name wins
+                # This matches legacy behaviour
+
+                license_file = self._module_licenses_by_module_name.get(module_name)
 
                 github_license_file = None
                 if original_license_name not in ["Commercial"]:
@@ -573,11 +630,11 @@ class SitePackages(object):
 
             module = Module(
                 name=module_name,
-                author=metadata["author"],
-                home_page=metadata["home_page"],
+                author=metadata.get_author(),
+                home_page=metadata.get_home_page(),
                 license_name=license_name,
                 license_file=license_file,
-                requires=metadata["requires"],
+                requires=metadata.get_requires(),
             )
 
             self._modules_by_module_name[module_name] = module

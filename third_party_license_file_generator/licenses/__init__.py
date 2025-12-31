@@ -4,6 +4,8 @@ import re
 import requests
 import datetime
 
+from third_party_license_file_generator.licenses.agpl_1_0 import data as agpl_1_0
+from third_party_license_file_generator.licenses.agpl_3_0 import data as agpl_3_0
 from third_party_license_file_generator.licenses.apache_1_1 import data as apache_1_1
 from third_party_license_file_generator.licenses.apache_2_0 import data as apache_2_0
 from third_party_license_file_generator.licenses.bsd_2_clause import (
@@ -23,8 +25,13 @@ from third_party_license_file_generator.licenses.mpl_1_1 import data as mpl_1_1
 from third_party_license_file_generator.licenses.mpl_2_0 import data as mpl_2_0
 from third_party_license_file_generator.licenses.pil import data as pil
 from third_party_license_file_generator.licenses.python_2_0 import data as python_2_0
+from third_party_license_file_generator.licenses.zope_1_1 import data as zope_1_1
+from third_party_license_file_generator.licenses.zope_2_0 import data as zope_2_0
+from third_party_license_file_generator.licenses.zope_2_1 import data as zope_2_1
 
 license_files = {
+    "agpl-1.0": agpl_1_0,
+    "agpl-3.0": agpl_3_0,
     "apache-1.1": apache_1_1,
     "apache-2.0": apache_2_0,
     "bsd-2-clause": bsd_2_clause,
@@ -41,9 +48,14 @@ license_files = {
     "mpl-2.0": mpl_2_0,
     "pil": pil,
     "python-2.0": python_2_0,
+    "zpl-1.1": zope_1_1,
+    "zpl-2.0": zope_2_0,
+    "zpl-2.1": zope_2_1,
 }
 
 license_friendly = {
+    "agpl-1.0": "AGPL-1.0",
+    "agpl-3.0": "AGPL-3.0",
     "apache-1.1": "Apache-1.1",
     "apache-2.0": "Apache-2.0",
     "bsd-2-clause": "BSD-2-clause",
@@ -60,6 +72,9 @@ license_friendly = {
     "mpl-2.0": "MPL-2.0",
     "pil": "PIL",
     "python-2.0": "Python-2.0",
+    "zpl-1.1": "ZPL-1.1",
+    "zpl-2.0": "ZPL-2.0",
+    "zpl-2.1": "ZPL-2.1",
 }
 
 assert set(license_friendly.keys()) == set(license_files.keys())
@@ -67,6 +82,8 @@ assert set(license_friendly.keys()) == set(license_files.keys())
 _MIT_BLURB = """Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions"""
 
 text_to_license = {
+    "GNU Affero General Public License Version 1.0": "agpl-1.0",
+    "GNU Affero General Public License Version 3": "agpl-3.0",
     "Apache Software License": "apache-1.1",
     "Apache License Version 2.0": "apache-2.0",
     "2-Clause BSD License": "bsd-2-clause",
@@ -88,6 +105,9 @@ text_to_license = {
     "Python Imaging Library": "pil",
     "Python License Version 2": "python-2.0",
     "PSF License Version 2": "python-2.0",
+    "Zope Public License Version 1.1": "zpl-1.1",
+    "Zope Public License Version 2.0": "zpl-2.0",
+    "Zope Public License Version 2.1": "zpl-2.1",
 }
 
 assert set(text_to_license.values()) == set(license_files.keys())
@@ -117,7 +137,13 @@ def parse_license(raw_license):
             return "LGPL-2.1"
         else:
             return "LGPL-3.0"
+    elif _safe_check(compare_license, "AGPL"):
+        if "3" in compare_license:
+            return "AGPL-3.0"
+        else:
+            return "AGPL-1.0"
     elif _safe_check(compare_license, "GPL"):
+        # GPL goes after LGPL and AGPL due to substring overlap
         if "2" in compare_license:
             return "GPL-2.0"
         else:
@@ -147,6 +173,16 @@ def parse_license(raw_license):
         return "ISC"
     elif _safe_check(compare_license, "PIL"):
         return "PIL"
+    elif _safe_check(compare_license, "ZPL"):
+        if "2.0" in compare_license:
+            return "ZPL-2.0"
+        elif "1.1" in compare_license:
+            return "ZPL-1.1"
+        else:
+            # Default to ZPL-2.1, it seems to be the most prevalent
+            return "ZPL-2.1"
+        # There are earlier ZPL licenses, but I'm hoping they just aren't use
+        # return nothing and use the unknown handling on a per-case basis
     elif _safe_check(compare_license, "Commercial"):
         return "Commercial"
     elif _safe_check(compare_license, "Unknown (assumed commercial)"):
